@@ -1,30 +1,74 @@
 ---
-title: "Algoritma K-Modes"
-author: "Deden iStiawan"
-date: "2022-11-23"
-output: html_document
+title: "Clustering Lahan Kritis dengan Algoritma K-Modes"
+author: "Deden Istiawan"
+output: 
+  html_document:
+    theme: flatly
+    higlight: zenburn
+    toc: true
+    toc_float:
+      collapsed: true
+    df_print: paged
+bibliography: references.bib
 ---
+<style>
+body{
+text-align: justify}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+# Algoritma K-Modes
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Pada Dunia nyata, data mungkin memiliki tipe yang berbeda, seperti data numerik dan kategorik. Untuk melakukan analisis *cluster*, kita harus mempertimbangkan tipe data yang kita miliki. Algoritma *clustering* yang biasa digunakan dalam teknik pengelompokan dan efisien digunakan untuk data besar adalah K-Means. akan tetapi algoritma K-Means hanya bisa digunakan untuk data numerik. Jadi, Huang pada tahun 1998 mengusulkan algoritma yang disebut K-Modes untuk menangani algoritma pengelompokan dengan tipe data kategorik. K-Modes pertamakali dipublikasikan oleh [@huang1998] yang merupakan metode pertama yang dapat mengelompokan data kategorik. Pendekatan K-Modes merupakan hasil modifikasi dari K-Means standar untuk mengklasterisasi data kategoris dengan mengantikan fungsi jarak Euclidean dengan jarak mismatching. Algoritma K-Means hanya dapat bekerja dengan baik untuk set data yang tipe datanya numerik (interval atau rasio), namun tidak dapat digunakan untuk fitur kategorikal (nominal atau ordinal). Permasalahan yang terjadi pada K-Means ini terbatas pada penggunaan data bertipe numerik karena pengelompokan yang dilakukan K-Means dengan cara menghitung rata-rata dari suatu data dengan data yang lain. Untuk Menyelesaikan maslah tersebut K-Modes melakukan modifikasi pada K-Means sebagai Berikut:
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+1.  Menggunakan ukuran pencocokan ketidakmiripan sederhana pada fitur data bertipe kategorikal
 
-```{r cars}
-summary(cars)
+2.  mengganti *mean cluster* dengan modus (nilai yang sering muncul)
+
+3.  menggunakan metode partisi berbasis frekuensi untuk mencari modus dari sekumpulan data
+
+Andaikan **X** dan **Y** adalah dua dara dengan variabel bertipe kategorik, ukuran ketidak miripan diantara **X** dan **Y** dapat diukur dengan jumlah ketidakcocokan nilai dari fitur yang berkorespondensi dari dua data. Semakin kecil nilai ketidakcocokan, maka semakin mirip data tersebut. matriks seperti ini sering disebut dengan pencocokan sederhana atau *simple matching [@prasetyo_2014]*
+
+**Untuk menjalankan algortima K-Modes dibutuhkan library [MASS](https://rdrr.io/cran/MASS/) dan library [KlaR](https://rdrr.io/cran/klaR/)**
+
+```{r library_kmodes, eval=FALSE, warning=FALSE}
+library(MASS)
+library(klaR)
 ```
 
-## Including Plots
+Package **readr** menyiapkan fungsi [`read_csv()`](https://readr.tidyverse.org/reference/read_delim.html) untuk import data dari file CSV. Pada kasus ini digunakan data [Daerah Aliran Sungai](https://github.com/dedenistiawan/dataset) (DAS).
 
-You can also embed plots, for example:
+```{r Load_data,warning=FALSE}
+library (readr)
+urlfile = "https://raw.githubusercontent.com/dedenistiawan/Dataset/main/Dataset%20DAS.csv"
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+data<-read_csv(url(urlfile))
+data
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+**Memeriksa Missing Value**
+
+```{r}
+colSums(is.na(data))
+```
+
+Tidak ada data yang kosong untuk setiap variabel
+
+**Setelah data berhasil diimport, jalankan algoritma [K-Modes](https://www.rdocumentation.org/packages/klaR/versions/0.6-15/topics/kmodes).**
+
+```{r kmodes, eval=FALSE}
+cluster.results <-kmodes(data , 3, iter.max = 10, weighted = FALSE )
+
+cluster.output <- cbind(data ,cluster.results$cluster)
+```
+
+**Simpan hasil cluster ouput algoritma K-Modes dalam bentuk CSV.**
+
+```{r save_csv, eval=FALSE}
+write.csv(cluster.output, file = "kmodes clusters.csv", row.names = TRUE)
+```
+
+# Reference
